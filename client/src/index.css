@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Nunito:wght@600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-cream: #fbf7f0;
+  --color-cocoa: #4b3025;
+  --color-rose: #d85f76;
+  --color-blush: #f8e6e4;
+  --color-peach: #f2c8a8;
+  --color-gold: #d99b42;
+  --font-sans: "DM Sans", sans-serif;
+  --font-display: "Nunito", sans-serif;
+}
+
+@layer base {
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--color-cream); color: var(--color-cocoa); font-family: var(--font-sans); }
+  button, a, input, select { -webkit-tap-highlight-color: transparent; }
+  button, a { cursor: pointer; }
+  img { display: block; }
+}
+
+@layer components {
+  .page-width { width: min(1240px, calc(100% - 2rem)); margin-inline: auto; }
+  .section-space { padding-block: clamp(4rem, 8vw, 7rem); }
+  .eyebrow { margin-bottom: .75rem; font-size: .72rem; line-height: 1rem; font-weight: 800; letter-spacing: .2em; color: var(--color-rose); }
+  .section-title { font-family: var(--font-display); font-size: clamp(2rem, 4vw, 3.35rem); line-height: 1.08; font-weight: 800; letter-spacing: -.035em; }
+  .button-primary, .button-secondary { display: inline-flex; min-height: 3rem; align-items: center; justify-content: center; gap: .5rem; border-radius: 999px; padding: .7rem 1.35rem; font-size: .875rem; font-weight: 800; transition: .2s ease; }
+  .button-primary { background: var(--color-cocoa); color: white; box-shadow: 0 10px 24px rgb(75 48 37 / .14); }
+  .button-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgb(75 48 37 / .22); }
+  .button-secondary { border: 1px solid rgb(75 48 37 / .2); background: white; color: var(--color-cocoa); }
+  .button-secondary:hover { border-color: var(--color-cocoa); transform: translateY(-2px); }
+  .icon-button { position: relative; display: grid; width: 2.6rem; height: 2.6rem; place-items: center; border-radius: 999px; transition: background .2s; }
+  .icon-button:hover { background: rgb(75 48 37 / .07); }
+  .icon-button svg { width: 1.25rem; height: 1.25rem; }
+  .badge { display: inline-flex; border-radius: 999px; background: var(--color-rose); padding: .28rem .55rem; font-size: .62rem; font-weight: 800; letter-spacing: .06em; color: white; }
+  .category-card { position: relative; aspect-ratio: 4/5; overflow: hidden; border-radius: 1.5rem; }
+  .product-card { min-width: 0; }
+  .input { width: 100%; min-height: 3.15rem; border: 1px solid rgb(75 48 37 / .15); border-radius: .9rem; background: white; padding: .7rem 1rem; outline: none; transition: .2s; }
+  .input:focus { border-color: var(--color-rose); box-shadow: 0 0 0 3px rgb(216 95 118 / .12); }
+  .form-card { border-radius: 1.5rem; background: white; padding: 1.5rem; }
+  .form-card legend { float: left; width: 100%; margin-bottom: 1.2rem; font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; }
+  .form-card legend + * { clear: both; }
+  .payment-option { display: flex; align-items: center; gap: 1rem; border: 1px solid rgb(75 48 37 / .12); border-radius: 1rem; padding: 1rem; margin-top: .8rem; }
+  .payment-option input { accent-color: var(--color-rose); }
+  .payment-option span { display: flex; flex-direction: column; }
+  .payment-option small { color: rgb(75 48 37 / .5); }
+  .product-detail { border-bottom: 1px solid rgb(75 48 37 / .12); padding-block: 1rem; }
+  .product-detail summary { cursor: pointer; font-weight: 800; }
+  .product-detail p { padding-top: .7rem; font-size: .9rem; line-height: 1.6; color: rgb(75 48 37 / .6); }
+}
+
+.hero-bg {
+  background:
+    radial-gradient(circle at 70% 20%, rgb(242 200 168 / .55), transparent 25%),
+    radial-gradient(circle at 5% 70%, rgb(248 230 228 / .9), transparent 32%),
+    linear-gradient(135deg, #fffaf3, #f8eee3);
+}
+
+nav a.active { color: var(--color-rose); }
+th, td { padding: .8rem .7rem; }
+
+@media (max-width: 640px) {
+  .page-width { width: min(100% - 1.25rem, 1240px); }
+  .category-card { aspect-ratio: 3/4; border-radius: 1.15rem; }
+  .product-card .button-secondary { padding-inline: .7rem; font-size: .75rem; }
+}
