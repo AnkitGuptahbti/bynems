@@ -22,7 +22,7 @@ function escapeHtml(value) {
 async function sendVerificationEmail({ name, email, token }) {
   logger.info({ operation: 'brevo.sendVerificationEmail' }, 'Service invoked');
   ensureEmailConfigured();
-  const verificationUrl = new URL('/verify-email', env.clientUrls[0]);
+  const verificationUrl = new URL('/verify-email', env.storeUrl);
   verificationUrl.searchParams.set('token', token);
 
   try {

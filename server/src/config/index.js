@@ -1,13 +1,31 @@
 const mongoose = require('mongoose');
 const { v2: cloudinary } = require('cloudinary');
 
+const clientUrls = (process.env.CLIENT_URL || 'http://localhost:3000')
+  .split(',')
+  .map((value) => value.trim())
+  .filter(Boolean);
+
+function storeUrlScore(url) {
+  try {
+    const { hostname } = new URL(url);
+    if (hostname === 'www.bynemstoys.com') return 3;
+    if (hostname === 'bynemstoys.com') return 2;
+    if (hostname.endsWith('.vercel.app')) return 0;
+    return 1;
+  } catch {
+    return -1;
+  }
+}
+
 const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT) || 5000,
   mongoUri: process.env.MONGODB_URI,
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
-  clientUrls: (process.env.CLIENT_URL || 'http://localhost:3000').split(',').map((v) => v.trim()),
+  clientUrls,
+  storeUrl: process.env.STORE_URL?.trim() || [...clientUrls].sort((a, b) => storeUrlScore(b) - storeUrlScore(a))[0],
   brevoApiKey: process.env.BREVO_API_KEY,
   brevoSenderEmail: process.env.BREVO_SENDER_EMAIL,
   brevoSenderName: process.env.BREVO_SENDER_NAME || 'BYNEMSTEDDY',
