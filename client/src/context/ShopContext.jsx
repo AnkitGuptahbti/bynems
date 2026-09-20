@@ -1,7 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
 const ShopContext = createContext(null)
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+
+function resolveApiUrl() {
+  const raw = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/$/, '')
+  return raw.endsWith('/api') ? raw : `${raw}/api`
+}
+
+const API_URL = resolveApiUrl()
 
 async function apiRequest(path, options = {}) {
   const token = localStorage.getItem('bynems-token')

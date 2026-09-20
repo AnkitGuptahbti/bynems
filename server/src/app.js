@@ -17,9 +17,19 @@ app.set('trust proxy', 1);
 app.disable('x-powered-by');
 app.use(httpLogger);
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+function isAllowedOrigin(origin) {
+  if (!origin || env.clientUrls.includes(origin)) return true;
+  try {
+    const { hostname } = new URL(origin);
+    return hostname === 'bynemstoys.com' || hostname === 'www.bynemstoys.com' || hostname.endsWith('.vercel.app');
+  } catch {
+    return false;
+  }
+}
+
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || env.clientUrls.includes(origin)) return callback(null, true);
+    if (isAllowedOrigin(origin)) return callback(null, true);
     return callback(new ApiError(403, 'Origin is not allowed by CORS'));
   },
   credentials: true,
