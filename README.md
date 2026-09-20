@@ -33,9 +33,9 @@ in `client/.env`.
 
 ### Authentication setup
 
-- Verification emails are sent with Nodemailer over SMTP. For Gmail, set
-  `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` and `SMTP_FROM_EMAIL`
-  in `server/.env`. Personal Gmail allows about 500 emails per day.
+- Verification emails are sent through the Brevo HTTP API. Set `BREVO_API_KEY`,
+  `BREVO_SENDER_EMAIL`, and `BREVO_SENDER_NAME`. The sender email must be
+  verified in the Brevo dashboard.
 - Create a Google OAuth 2.0 **Web application** client and add
   `http://localhost:5173` as an authorized JavaScript origin.
 - Put the same Google client ID in `server/.env` as `GOOGLE_CLIENT_ID` and in

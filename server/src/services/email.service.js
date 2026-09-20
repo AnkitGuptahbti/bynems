@@ -1,11 +1,11 @@
-const nodemailer = require('nodemailer');
+const axios = require('axios');
 const { env } = require('../config');
 const { logger } = require('../config/logger');
 const { ApiError } = require('../utils');
 
 function ensureEmailConfigured() {
-  logger.info({ operation: 'smtp.ensureConfigured' }, 'Service invoked');
-  if (!env.smtpHost || !env.smtpUser || !env.smtpPass || !env.smtpFromEmail) {
+  logger.info({ operation: 'brevo.ensureConfigured' }, 'Service invoked');
+  if (!env.brevoApiKey || !env.brevoSenderEmail) {
     throw new ApiError(503, 'Email verification is not configured');
   }
 }
@@ -20,23 +20,17 @@ function escapeHtml(value) {
 }
 
 async function sendVerificationEmail({ name, email, token }) {
-  logger.info({ operation: 'smtp.sendVerificationEmail' }, 'Service invoked');
+  logger.info({ operation: 'brevo.sendVerificationEmail' }, 'Service invoked');
   ensureEmailConfigured();
   const verificationUrl = new URL('/verify-email', env.clientUrls[0]);
   verificationUrl.searchParams.set('token', token);
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: env.smtpHost,
-      port: env.smtpPort,
-      secure: env.smtpSecure,
-      auth: { user: env.smtpUser, pass: env.smtpPass },
-    });
-    const response = await transporter.sendMail({
-      from: { name: env.smtpFromName, address: env.smtpFromEmail },
-      to: { name, address: email },
+    const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
+      sender: { name: env.brevoSenderName, email: env.brevoSenderEmail },
+      to: [{ email, name }],
       subject: 'Verify your BYNEMSTOYS email',
-      html: `
+      htmlContent: `
         <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#402e2a">
           <h1>Welcome to BYNEMSTOYS</h1>
           <p>Hello ${escapeHtml(name)},</p>
@@ -45,17 +39,22 @@ async function sendVerificationEmail({ name, email, token }) {
           <p>This link expires in one hour. If you did not create this account, you can ignore this email.</p>
         </div>
       `,
+    }, {
+      headers: { 'api-key': env.brevoApiKey, accept: 'application/json' },
+      timeout: 15000,
     });
     logger.info({
-      operation: 'smtp.sendVerificationEmail',
-      providerMessageId: response.messageId,
+      operation: 'brevo.sendVerificationEmail',
+      providerMessageId: response.data?.messageId,
     }, 'Service completed');
   } catch (error) {
     if (error instanceof ApiError) throw error;
     logger.error({
-      operation: 'smtp.sendVerificationEmail',
+      operation: 'brevo.sendVerificationEmail',
       errorCode: error.code,
-      providerResponse: error.response,
+      errorMessage: error.message,
+      providerStatus: error.response?.status,
+      providerResponse: error.response?.data,
     }, 'Service failed');
     throw new ApiError(502, 'Unable to send verification email. Please try again');
   }
