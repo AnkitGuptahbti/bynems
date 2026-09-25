@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { Header, Footer } from './components/store'
 import { ShopProvider } from './context/ShopContext'
@@ -11,10 +12,26 @@ import {
   ShippingPolicy, TermsAndConditions,
 } from './pages/InfoPages'
 
+function ScrollToTop() {
+  const { pathname, search, hash } = useLocation()
+  useEffect(() => {
+    if (hash) {
+      const target = document.getElementById(hash.slice(1))
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        return
+      }
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [pathname, search, hash])
+  return null
+}
+
 function StoreRoutes() {
   const location = useLocation()
   const isAdmin = location.pathname.startsWith('/admin')
   return <>
+    <ScrollToTop />
     {!isAdmin && <Header />}
     <Routes>
       <Route path="/" element={<Home />} />

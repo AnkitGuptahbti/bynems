@@ -8,46 +8,46 @@ const router = express.Router();
 
 const adminOnly = [protect, authorize('admin')];
 const validateCreateProduct = [
-  body('name').trim().notEmpty(),
-  body('sku').trim().notEmpty(),
-  body('category').isMongoId(),
-  body('price').isFloat({ min: 0 }),
-  body('mrp').isFloat({ min: 0 }),
-  body('description').trim().notEmpty(),
-  body('images').isArray({ min: 1 }),
-  body('variants').isArray({ min: 1 }),
-  body('variants.*.label').trim().notEmpty(),
-  body('variants.*.color').trim().notEmpty(),
-  body('variants.*.lengthCm').isFloat({ min: 0.1 }),
-  body('variants.*.breadthCm').isFloat({ min: 0.1 }),
-  body('variants.*.heightCm').isFloat({ min: 0.1 }),
-  body('variants.*.weightGrams').isFloat({ min: 1 }),
-  body('variants.*.stock').isInt({ min: 0 }),
-  body('variants.*.price').isFloat({ min: 0 }),
-  body('variants.*.sku').trim().notEmpty(),
+  body('name').trim().isLength({ min: 2, max: 120 }).withMessage('Enter a product name'),
+  body('sku').trim().notEmpty().withMessage('Enter a product SKU'),
+  body('category').isMongoId().withMessage('Select a category'),
+  body('price').isFloat({ min: 0 }).withMessage('Enter a valid selling price'),
+  body('mrp').isFloat({ min: 0 }).withMessage('Enter a valid MRP'),
+  body('description').trim().isLength({ min: 10 }).withMessage('Enter a product description'),
+  body('images').isArray({ min: 1 }).withMessage('Upload at least one product image'),
+  body('variants').isArray({ min: 1 }).withMessage('Add at least one product variant'),
+  body('variants.*.label').trim().notEmpty().withMessage('Each variant needs a size label'),
+  body('variants.*.color').trim().notEmpty().withMessage('Each variant needs a colour'),
+  body('variants.*.lengthCm').isFloat({ min: 0.1 }).withMessage('Enter a valid length'),
+  body('variants.*.breadthCm').isFloat({ min: 0.1 }).withMessage('Enter a valid breadth'),
+  body('variants.*.heightCm').isFloat({ min: 0.1 }).withMessage('Enter a valid height'),
+  body('variants.*.weightGrams').isFloat({ min: 1 }).withMessage('Enter a valid weight in grams'),
+  body('variants.*.stock').isInt({ min: 0 }).withMessage('Stock cannot be negative'),
+  body('variants.*.price').isFloat({ min: 0 }).withMessage('Enter a valid variant price'),
+  body('variants.*.sku').trim().notEmpty().withMessage('Each variant needs a SKU'),
   body('variants.*.images').optional().isArray(),
-  body('variants.*.images.*.url').optional().isURL(),
+  body('variants.*.images.*.url').optional().isURL().withMessage('Variant image URL is invalid'),
   validate,
 ];
 const validateProductId = [
-  param('id').isMongoId(),
+  param('id').isMongoId().withMessage('Product not found'),
   validate,
 ];
 const validateCreateCategory = [
-  body('name').trim().notEmpty(),
-  body('image.url').isURL(),
+  body('name').trim().isLength({ min: 2, max: 80 }).withMessage('Enter a category name'),
+  body('image.url').isURL().withMessage('Upload a category image'),
   validate,
 ];
 const validateCategoryId = [
-  param('id').isMongoId(),
+  param('id').isMongoId().withMessage('Category not found'),
   validate,
 ];
 const validateOrderId = [
-  param('id').isMongoId(),
+  param('id').isMongoId().withMessage('Order not found'),
   validate,
 ];
 const validateCouponId = [
-  param('id').isMongoId(),
+  param('id').isMongoId().withMessage('Coupon not found'),
   validate,
 ];
 const uploadProductImages = upload.array('images', 10);

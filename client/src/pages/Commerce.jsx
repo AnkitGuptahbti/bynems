@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, ChevronDown, Heart, MapPin, Minus, PackageCheck, Plus, Search, ShieldCheck, ShoppingBag, Star, Truck } from 'lucide-react'
-import { ProductCard, SectionHeading, money } from '../components/store'
+import { FieldError, ProductCard, SectionHeading, money } from '../components/store'
 import { useShop } from '../context/ShopContext'
 import { AddressForm } from './AccountDetails'
+import { TRACK_RULES, validateFields } from '../lib/validation'
 
 export function Shop() {
   const { products, categories, catalogLoading, catalogError } = useShop()
@@ -36,8 +37,15 @@ export function Shop() {
     </div>
     <div className="my-8 flex flex-col justify-between gap-3 border-y border-cocoa/10 py-4 sm:flex-row">
       <form className="flex items-center gap-2 rounded-full bg-white px-4" onSubmit={(event) => { event.preventDefault(); update('q', new FormData(event.currentTarget).get('q')) }}><Search size={18} /><input name="q" defaultValue={params.get('q')} placeholder="Search products" className="py-3 outline-none" /></form>
-      <label className="relative flex items-center gap-2 rounded-full bg-white px-4 text-sm font-bold">Sort by
-        <select value={sort} onChange={(event) => update('sort', event.target.value)} className="appearance-none bg-transparent py-3 pr-6 outline-none"><option value="popular">Popular</option><option value="newest">Newest</option><option value="price-low">Price: Low to high</option><option value="price-high">Price: High to low</option><option value="rating">Rating</option></select><ChevronDown className="pointer-events-none absolute right-3" size={15} />
+      <label className="select-wrap text-sm font-bold">Sort by
+        <select value={sort} onChange={(event) => update('sort', event.target.value)}>
+          <option value="popular">Popular</option>
+          <option value="newest">Newest</option>
+          <option value="price-low">Price: Low to high</option>
+          <option value="price-high">Price: High to low</option>
+          <option value="rating">Rating</option>
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-3 text-cocoa/50" size={16} />
       </label>
     </div>
     <p className="mb-6 text-sm text-cocoa/50">{filtered.length} cuddly companions</p>
@@ -138,7 +146,7 @@ function loadRazorpay() {
 }
 
 export function Checkout() {
-  const { cart, subtotal, user, apiRequest } = useShop()
+  const { cart, subtotal, user, apiRequest, clearCart } = useShop()
   const navigate = useNavigate()
   const [loading,setLoading] = useState(false)
   const [error,setError] = useState('')
@@ -223,6 +231,7 @@ export function Checkout() {
         })
         checkout.open()
       })
+      clearCart()
       navigate(`/order-success?order=${order.orderId}`)
     } catch (requestError) { setError(requestError.message) } finally { setLoading(false) }
   }
@@ -258,9 +267,13 @@ export function TrackOrder() {
   const [params] = useSearchParams()
   const [result,setResult]=useState(null)
   const [error,setError]=useState('')
+  const [fieldErrors,setFieldErrors]=useState({})
   const submit=async(event)=>{
     event.preventDefault(); setError(''); setResult(null)
     const fields=Object.fromEntries(new FormData(event.currentTarget))
+    const nextErrors = validateFields(fields, TRACK_RULES)
+    setFieldErrors(nextErrors)
+    if (Object.keys(nextErrors).length) return
     try {
       const data=await apiRequest(`/orders/track/${encodeURIComponent(fields.orderId)}?phone=${encodeURIComponent(fields.phone)}`)
       setResult(data.order)
@@ -288,7 +301,7 @@ export function TrackOrder() {
 
   return <main className="page-width max-w-3xl! py-16">
     <div className="text-center"><p className="eyebrow">WHERE IS MY CUDDLE?</p><h1 className="font-display text-4xl font-bold md:text-5xl">Track your order</h1><p className="mt-3 text-cocoa/55">Enter your order details for the latest delivery update.</p></div>
-    <form onSubmit={submit} className="mt-8 grid gap-3 rounded-3xl bg-white p-6 shadow-sm sm:grid-cols-2"><input className="input" name="orderId" defaultValue={params.get('order') || ''} placeholder="Order ID" required/><input className="input" name="phone" defaultValue={params.get('phone') || ''} placeholder="Phone number" required/><button className="button-primary sm:col-span-2">Track order</button>{error&&<p className="text-center text-sm font-semibold text-red-700 sm:col-span-2">{error}</p>}</form>
+    <form onSubmit={submit} noValidate className="mt-8 grid gap-3 rounded-3xl bg-white p-6 shadow-sm sm:grid-cols-2"><div><input className={`input ${fieldErrors.orderId ? 'input-error' : ''}`} name="orderId" defaultValue={params.get('order') || ''} placeholder="Order ID" /><FieldError message={fieldErrors.orderId} /></div><div><input className={`input ${fieldErrors.phone ? 'input-error' : ''}`} name="phone" inputMode="numeric" maxLength="10" defaultValue={params.get('phone') || ''} placeholder="Phone number" /><FieldError message={fieldErrors.phone} /></div><button className="button-primary sm:col-span-2">Track order</button>{error&&<p className="text-center text-sm font-semibold text-red-700 sm:col-span-2">{error}</p>}</form>
     {result&&<div className="mt-7 rounded-3xl bg-white p-7">
       <div className="flex justify-between gap-4"><div><p className="text-xs text-cocoa/50">ORDER</p><strong>{result.orderId}</strong></div><span className="badge h-fit">{String(displayStatus).replaceAll('_',' ')}</span></div>
       {!isPaid&&<div className="mt-5 rounded-2xl bg-amber-50 p-4 text-sm text-amber-800"><strong>{result.paymentStatus === 'FAILED' ? 'Payment failed' : result.paymentStatus === 'REFUNDED' ? 'Payment refunded' : 'Payment pending'}</strong><p className="mt-1">{result.paymentStatus === 'FAILED' ? 'This order was not confirmed because the payment failed.' : result.paymentStatus === 'REFUNDED' ? 'The payment for this order has been refunded.' : 'This order will be confirmed after payment is completed.'}</p></div>}
@@ -299,6 +312,8 @@ export function TrackOrder() {
 }
 
 export function OrderSuccess() {
+  const { clearCart } = useShop()
   const [params]=useSearchParams()
+  useEffect(() => { clearCart() }, [clearCart])
   return <main className="page-width grid min-h-[65vh] place-items-center py-12"><div className="max-w-lg rounded-[2rem] bg-white p-8 text-center shadow-sm"><div className="mx-auto grid h-18 w-18 place-items-center rounded-full bg-green-100 text-green-700"><Check size={34}/></div><h1 className="mt-5 font-display text-4xl font-bold">Your cuddle is confirmed!</h1><p className="mt-3 text-cocoa/55">We will send tracking updates as soon as your order is packed.</p><p className="mt-5 rounded-xl bg-cream p-3 text-sm">Order ID: <b>{params.get('order')}</b></p><Link to="/" className="button-primary mt-6">Continue shopping</Link></div></main>
 }

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
 const ShopContext = createContext(null)
 
@@ -20,7 +20,11 @@ async function apiRequest(path, options = {}) {
     },
   })
   const data = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(data.message || 'Something went wrong')
+  if (!response.ok) {
+    const error = new Error(data.errors?.[0]?.msg || data.message || 'Something went wrong')
+    error.fields = Object.fromEntries((data.errors || []).map((entry) => [entry.path, entry.msg]))
+    throw error
+  }
   return data
 }
 
@@ -134,6 +138,12 @@ export function ShopProvider({ children }) {
   }
 
   const removeFromCart = (id, variantId) => setCart((current) => current.filter((item) => (item.product.id || item.product._id) !== id || String(item.variantId) !== String(variantId)))
+  const clearCart = useCallback(() => {
+    setCart([])
+    if (localStorage.getItem('bynems-token')) {
+      apiRequest('/cart', { method: 'DELETE' }).catch(() => {})
+    }
+  }, [])
   const toggleWishlist = (id) => setWishlist((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0)
   const subtotal = cart.reduce((sum, item) => {
@@ -143,8 +153,8 @@ export function ShopProvider({ children }) {
 
   const value = useMemo(() => ({
     products, categories, catalogLoading, catalogError, cart, wishlist, user, setUser, cartOpen, setCartOpen, addToCart,
-    updateQuantity, removeFromCart, toggleWishlist, cartCount, subtotal, apiUrl: API_URL, apiRequest,
-  }), [products, categories, catalogLoading, catalogError, cart, wishlist, user, cartOpen, cartCount, subtotal])
+    updateQuantity, removeFromCart, clearCart, toggleWishlist, cartCount, subtotal, apiUrl: API_URL, apiRequest,
+  }), [products, categories, catalogLoading, catalogError, cart, wishlist, user, cartOpen, cartCount, subtotal, clearCart])
 
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>
 }

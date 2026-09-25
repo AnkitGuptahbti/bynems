@@ -164,7 +164,7 @@ function Orders({ orders, onUpdate }) {
 }
 
 function OrderTable({ orders, editable = false, onUpdate }) {
-  return <div className="mt-5 overflow-x-auto"><table className="w-full min-w-[780px] text-left text-sm"><thead><tr className="border-b border-cocoa/10 text-cocoa/45"><th>Order</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead><tbody>{orders.map((order) => <tr key={order._id} className="border-b border-cocoa/5"><td className="font-bold">{order.orderId}</td><td>{order.user?.name || order.shippingAddress?.fullName || 'Customer'}</td><td>{money(order.totalAmount)}</td><td>{editable ? <select className="rounded-lg border border-cocoa/10 bg-white p-2" value={order.paymentStatus} onChange={(event) => onUpdate(order._id, { paymentStatus: event.target.value })}>{['PENDING','PAID','FAILED','REFUNDED'].map((status) => <option key={status}>{status}</option>)}</select> : <span className="badge">{order.paymentStatus}</span>}</td><td>{editable ? <select className="rounded-lg border border-cocoa/10 bg-white p-2" value={order.orderStatus} onChange={(event) => onUpdate(order._id, { orderStatus: event.target.value })}>{['PENDING','PLACED','CONFIRMED','PACKED','SHIPPED','DELIVERED','CANCELLED'].map((status) => <option key={status}>{status}</option>)}</select> : order.orderStatus}</td></tr>)}</tbody></table></div>
+  return <div className="mt-5 overflow-x-auto"><table className="w-full min-w-[780px] text-left text-sm"><thead><tr className="border-b border-cocoa/10 text-cocoa/45"><th>Order</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead><tbody>{orders.map((order) => <tr key={order._id} className="border-b border-cocoa/5"><td className="font-bold">{order.orderId}</td><td>{order.user?.name || order.shippingAddress?.fullName || 'Customer'}</td><td>{money(order.totalAmount)}</td><td>{editable ? <select className="select min-h-10! py-2 text-xs" value={order.paymentStatus} onChange={(event) => onUpdate(order._id, { paymentStatus: event.target.value })}>{['PENDING','PAID','FAILED','REFUNDED'].map((status) => <option key={status}>{status}</option>)}</select> : <span className="badge">{order.paymentStatus}</span>}</td><td>{editable ? <select className="select min-h-10! py-2 text-xs" value={order.orderStatus} onChange={(event) => onUpdate(order._id, { orderStatus: event.target.value })}>{['PENDING','PLACED','CONFIRMED','PACKED','SHIPPED','DELIVERED','CANCELLED'].map((status) => <option key={status}>{status}</option>)}</select> : order.orderStatus}</td></tr>)}</tbody></table></div>
 }
 
 const COLOR_OPTIONS = ['Brown', 'Cream', 'White', 'Pink', 'Golden', 'Grey', 'Black', 'Red', 'Blue']
@@ -216,6 +216,20 @@ function ProductForm({ item, categories, apiRequest, onClose, onSaved }) {
       return
     }
     const fields = Object.fromEntries(new FormData(event.currentTarget))
+    if (!String(fields.name || '').trim()) { setError('Enter a product name'); setSaving(false); return }
+    if (!String(fields.sku || '').trim()) { setError('Enter a product SKU'); setSaving(false); return }
+    if (!fields.category) { setError('Select a category'); setSaving(false); return }
+    if (Number(fields.price) < 0 || Number(fields.mrp) < 0) { setError('Price and MRP must be 0 or more'); setSaving(false); return }
+    if (!String(fields.description || '').trim() || fields.description.trim().length < 10) {
+      setError('Enter a product description of at least 10 characters')
+      setSaving(false)
+      return
+    }
+    if (variants.some((variant) => !variant.color || Number(variant.lengthCm) <= 0 || Number(variant.weightGrams) <= 0)) {
+      setError('Each variant needs a colour, dimensions and weight')
+      setSaving(false)
+      return
+    }
     const payload = {
       name: fields.name, sku: fields.sku, category: fields.category,
       price: Number(fields.price), mrp: Number(fields.mrp), description: fields.description,
@@ -245,7 +259,7 @@ function ProductForm({ item, categories, apiRequest, onClose, onSaved }) {
 
   return <Modal title={item ? 'Edit product' : 'Add product'} onClose={onClose}><form onSubmit={submit} className="space-y-5">
     {error && <Alert tone="error" message={error} />}
-    <div className="grid gap-4 sm:grid-cols-2"><Field label="Product name"><input className="input" name="name" defaultValue={item?.name} required /></Field><Field label="SKU"><input className="input" name="sku" defaultValue={item?.sku} required /></Field><Field label="Category"><select className="input" name="category" defaultValue={item?.category?._id || ''} required><option value="">Select category</option>{categories.map((category) => <option key={category._id} value={category._id}>{category.name}</option>)}</select></Field><Field label="Tags (comma separated)"><input className="input" name="tags" defaultValue={item?.tags?.join(', ')} /></Field><Field label="Base selling price"><input className="input" name="price" type="number" min="0" defaultValue={item?.price} required /></Field><Field label="MRP"><input className="input" name="mrp" type="number" min="0" defaultValue={item?.mrp} required /></Field></div>
+    <div className="grid gap-4 sm:grid-cols-2"><Field label="Product name"><input className="input" name="name" defaultValue={item?.name} required /></Field><Field label="SKU"><input className="input" name="sku" defaultValue={item?.sku} required /></Field><Field label="Category"><select className="select" name="category" defaultValue={item?.category?._id || ''} required><option value="">Select category</option>{categories.map((category) => <option key={category._id} value={category._id}>{category.name}</option>)}</select></Field><Field label="Tags (comma separated)"><input className="input" name="tags" defaultValue={item?.tags?.join(', ')} /></Field><Field label="Base selling price"><input className="input" name="price" type="number" min="0" defaultValue={item?.price} required /></Field><Field label="MRP"><input className="input" name="mrp" type="number" min="0" defaultValue={item?.mrp} required /></Field></div>
     <Field label="Description"><textarea className="input min-h-28" name="description" defaultValue={item?.description} required /></Field>
     <div>
       <div className="mb-3 flex items-center justify-between gap-3">
@@ -257,7 +271,7 @@ function ProductForm({ item, categories, apiRequest, onClose, onSaved }) {
           <div key={variant._id || index} className="rounded-2xl border border-cocoa/10 bg-cream/50 p-4">
             <div className="mb-3 flex items-center justify-between"><strong className="text-sm">Variant {index + 1}</strong>{variants.length > 1 && <button type="button" className="text-xs font-bold text-rose" onClick={() => setVariants((current) => current.filter((_, i) => i !== index))}>Remove</button>}</div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Field label="Colour"><select className="input" value={COLOR_OPTIONS.includes(variant.color) ? variant.color : 'Custom'} onChange={(event) => updateVariant(index, 'color', event.target.value === 'Custom' ? '' : event.target.value)}>{COLOR_OPTIONS.map((color) => <option key={color}>{color}</option>)}<option>Custom</option></select></Field>
+              <Field label="Colour"><select className="select" value={COLOR_OPTIONS.includes(variant.color) ? variant.color : 'Custom'} onChange={(event) => updateVariant(index, 'color', event.target.value === 'Custom' ? '' : event.target.value)}>{COLOR_OPTIONS.map((color) => <option key={color}>{color}</option>)}<option>Custom</option></select></Field>
               {!COLOR_OPTIONS.includes(variant.color) && <Field label="Custom colour"><input className="input" value={variant.color} onChange={(event) => updateVariant(index, 'color', event.target.value)} placeholder="e.g. Lavender" required /></Field>}
               <Field label="Length (cm)"><input className="input" type="number" min="0.1" step="0.1" value={variant.lengthCm} onChange={(event) => updateVariant(index, 'lengthCm', event.target.value)} required /></Field>
               <Field label="Breadth (cm)"><input className="input" type="number" min="0.1" step="0.1" value={variant.breadthCm} onChange={(event) => updateVariant(index, 'breadthCm', event.target.value)} required /></Field>
@@ -310,6 +324,11 @@ function CategoryForm({ item, apiRequest, onClose, onSaved }) {
       return
     }
     const fields = Object.fromEntries(new FormData(event.currentTarget))
+    if (!String(fields.name || '').trim() || fields.name.trim().length < 2) {
+      setError('Enter a category name')
+      setSaving(false)
+      return
+    }
     const payload = { name: fields.name, description: fields.description, sortOrder: Number(fields.sortOrder) || 0, image, isActive: fields.isActive === 'on' }
     try {
       await apiRequest(`/admin/categories${item ? `/${item._id}` : ''}`, { method: item ? 'PATCH' : 'POST', body: JSON.stringify(payload) })

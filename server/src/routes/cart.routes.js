@@ -6,22 +6,22 @@ const { protect, validate } = require('../middleware');
 const router = express.Router();
 
 const validateAddItem = [
-  body('productId').isMongoId(),
-  body('variantId').isMongoId(),
-  body('quantity').optional().isInt({ min: 1, max: 20 }),
+  body('productId').isMongoId().withMessage('Select a valid product'),
+  body('variantId').isMongoId().withMessage('Select a product variant'),
+  body('quantity').optional().isInt({ min: 1, max: 20 }).withMessage('Quantity must be between 1 and 20'),
   validate,
 ];
 const validateUpdateItem = [
-  param('itemId').isMongoId(),
-  body('quantity').isInt({ min: 1, max: 20 }),
+  param('itemId').isMongoId().withMessage('Cart item not found'),
+  body('quantity').isInt({ min: 1, max: 20 }).withMessage('Quantity must be between 1 and 20'),
   validate,
 ];
 const validateItemId = [
-  param('itemId').isMongoId(),
+  param('itemId').isMongoId().withMessage('Cart item not found'),
   validate,
 ];
 const validateCoupon = [
-  body('code').trim().notEmpty(),
+  body('code').trim().notEmpty().withMessage('Enter a coupon code'),
   validate,
 ];
 

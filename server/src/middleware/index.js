@@ -33,8 +33,9 @@ const authorize = (...roles) => (req, _res, next) => {
 
 const validate = (req, _res, next) => {
   const errors = validationResult(req);
-  if (!errors.isEmpty()) return next(new ApiError(422, 'Validation failed', errors.array()));
-  next();
+  if (errors.isEmpty()) return next();
+  const details = errors.array({ onlyFirstError: true });
+  return next(new ApiError(422, details[0]?.msg || 'Validation failed', details));
 };
 
 const upload = multer({

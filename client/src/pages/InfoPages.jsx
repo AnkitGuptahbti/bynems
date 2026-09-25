@@ -4,7 +4,7 @@ import { Building2, Clock3, Mail, MapPin, PackageCheck, Phone, Truck } from 'luc
 const BUSINESS = {
   brand: 'BYNEMSTOYS',
   tradeName: 'ByNems',
-  email: 'bynemstoysindia@email.com',
+  email: 'bynemstoysindia@gmail.com',
   phone: '9318471492',
   address: 'D-002, 3rd Floor, Hamza Apartment III, Shersha Marg, near Shersha Masjid, Haldoni Village, Greater Noida, Gautam Buddha Nagar, Uttar Pradesh 201308, India',
 }

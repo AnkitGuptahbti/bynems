@@ -6,13 +6,13 @@ const { protect, validate } = require('../middleware');
 const router = express.Router();
 
 const validateCreatePayment = [
-  body('orderId').trim().notEmpty(),
+  body('orderId').trim().notEmpty().withMessage('Order ID is required'),
   validate,
 ];
 const validatePaymentVerification = [
-  body('razorpay_order_id').notEmpty(),
-  body('razorpay_payment_id').notEmpty(),
-  body('razorpay_signature').notEmpty(),
+  body('razorpay_order_id').notEmpty().withMessage('Payment order is missing'),
+  body('razorpay_payment_id').notEmpty().withMessage('Payment ID is missing'),
+  body('razorpay_signature').notEmpty().withMessage('Payment signature is missing'),
   validate,
 ];
 

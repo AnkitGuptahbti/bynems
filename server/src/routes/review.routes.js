@@ -11,8 +11,8 @@ const validateProductId = [
 ];
 const validateCreateReview = [
   param('productId').isMongoId(),
-  body('rating').isInt({ min: 1, max: 5 }),
-  body('comment').trim().isLength({ min: 3, max: 2000 }),
+  body('rating').isInt({ min: 1, max: 5 }).withMessage('Choose a rating from 1 to 5'),
+  body('comment').trim().isLength({ min: 3, max: 2000 }).withMessage('Write a short review'),
   validate,
 ];
 

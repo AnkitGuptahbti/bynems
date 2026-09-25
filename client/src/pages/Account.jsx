@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { Heart, LogOut, MapPin, ShoppingBag } from 'lucide-react'
 import { useShop } from '../context/ShopContext'
+import { FieldError } from '../components/store'
+import { AUTH_RULES, validateFields } from '../lib/validation'
 
 export function Account() {
   const { user, setUser, apiUrl } = useShop()
@@ -10,6 +12,7 @@ export function Account() {
   const [message, setMessage] = useState('')
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState({})
 
   const acceptAuth = (data) => {
     localStorage.setItem('bynems-token', data.token)
@@ -22,6 +25,14 @@ export function Account() {
     setError('')
     setMessage('')
     const payload = Object.fromEntries(new FormData(event.currentTarget))
+    const rules = mode === 'register' ? AUTH_RULES : { email: AUTH_RULES.email, password: AUTH_RULES.password }
+    const nextErrors = validateFields(payload, rules)
+    if (Object.keys(nextErrors).length) {
+      setFieldErrors(nextErrors)
+      setLoading(false)
+      return
+    }
+    setFieldErrors({})
     try {
       const response = await fetch(`${apiUrl}/auth/${mode}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       const data = await response.json()
@@ -122,11 +133,11 @@ export function Account() {
           OR
           <span className="h-px flex-1 bg-cocoa/10" />
         </div>
-        <form className="space-y-4" onSubmit={submit}>
-          {mode === 'register' && <input className="input" name="name" placeholder="Full name" required />}
-          <input className="input" name="email" type="email" placeholder="Email address" value={email} onChange={(event) => setEmail(event.target.value)} required />
-          {mode === 'register' && <input className="input" name="phone" placeholder="Phone number" required />}
-          <input className="input" name="password" type="password" placeholder="Password" minLength="8" required />
+        <form className="space-y-4" onSubmit={submit} noValidate>
+          {mode === 'register' && <div><input className={`input ${fieldErrors.name ? 'input-error' : ''}`} name="name" placeholder="Full name" /><FieldError message={fieldErrors.name} /></div>}
+          <div><input className={`input ${fieldErrors.email ? 'input-error' : ''}`} name="email" type="email" placeholder="Email address" value={email} onChange={(event) => setEmail(event.target.value)} /><FieldError message={fieldErrors.email} /></div>
+          {mode === 'register' && <div><input className={`input ${fieldErrors.phone ? 'input-error' : ''}`} name="phone" inputMode="numeric" maxLength="10" placeholder="Phone number" /><FieldError message={fieldErrors.phone} /></div>}
+          <div><input className={`input ${fieldErrors.password ? 'input-error' : ''}`} name="password" type="password" placeholder="Password" /><FieldError message={fieldErrors.password} /></div>
           {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
           {message && <p className="rounded-xl bg-green-50 p-3 text-sm text-green-700">{message}</p>}
           <button disabled={loading} className="button-primary w-full">{loading ? 'Please wait…' : mode === 'login' ? 'Login' : 'Create account'}</button>
@@ -136,7 +147,7 @@ export function Account() {
             Resend verification email
           </button>
         )}
-        <button onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); setMessage('') }} className="mt-4 w-full text-center text-sm font-bold underline">
+        <button onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); setMessage(''); setFieldErrors({}) }} className="mt-4 w-full text-center text-sm font-bold underline">
           {mode === 'login' ? 'New here? Create an account' : 'Already have an account? Login'}
         </button>
       </div>

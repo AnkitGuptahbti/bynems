@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { ArrowLeft, Edit3, MapPin, Package, Plus, Trash2, Truck, X } from 'lucide-react'
-import { money } from '../components/store'
+import { FieldError, money } from '../components/store'
 import { useShop } from '../context/ShopContext'
+import { ADDRESS_RULES, INDIAN_STATES, validateFields } from '../lib/validation'
 
 export function MyOrders() {
   const { user, apiRequest } = useShop()
@@ -144,8 +145,58 @@ export function Addresses() {
   )
 }
 
+function AddressField({ name, error, className = '', ...props }) {
+  return <div className={className}><input name={name} className={`input ${error ? 'input-error' : ''}`} {...props} /><FieldError message={error} /></div>
+}
+
 export function AddressForm({ address, user, saving, error, onSubmit, onClose }) {
-  return <div className="fixed inset-0 z-50 overflow-y-auto bg-cocoa/50 p-3 backdrop-blur-sm sm:p-8" onMouseDown={onClose}><div className="mx-auto max-w-2xl rounded-3xl bg-white shadow-2xl" onMouseDown={(event) => event.stopPropagation()}><div className="flex items-center justify-between border-b border-cocoa/10 p-5 sm:px-7"><h2 className="font-display text-2xl font-bold">{address ? 'Edit address' : 'Add address'}</h2><button className="icon-button" onClick={onClose}><X /></button></div><form onSubmit={onSubmit} className="grid gap-4 p-5 sm:grid-cols-2 sm:p-7">{error && <div className="rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700 sm:col-span-2">{error}</div>}<input className="input" name="label" placeholder="Label (Home, Work)" defaultValue={address?.label || 'Home'} required /><input className="input" name="fullName" placeholder="Full name" defaultValue={address?.fullName || user.name} required /><input className="input" name="phone" placeholder="Phone number" defaultValue={address?.phone || user.phone} required /><input className="input" name="email" type="email" placeholder="Email" defaultValue={address?.email || user.email} /><input className="input sm:col-span-2" name="address" placeholder="House number, street and area" defaultValue={address?.address} required /><input className="input sm:col-span-2" name="apartment" placeholder="Apartment or landmark (optional)" defaultValue={address?.apartment} /><input className="input" name="city" placeholder="City" defaultValue={address?.city} required /><input className="input" name="state" placeholder="State" defaultValue={address?.state} required /><input className="input" name="pincode" inputMode="numeric" pattern="[0-9]{6}" placeholder="6-digit pincode" defaultValue={address?.pincode} required /><input className="input" name="country" placeholder="Country" defaultValue={address?.country || 'India'} required /><label className="flex items-center gap-2 text-sm font-bold sm:col-span-2"><input type="checkbox" name="isDefault" defaultChecked={address?.isDefault} /> Make this my default address</label><div className="flex justify-end gap-3 border-t border-cocoa/10 pt-5 sm:col-span-2"><button type="button" className="button-secondary" onClick={onClose}>Cancel</button><button disabled={saving} className="button-primary">{saving ? 'Saving…' : 'Save address'}</button></div></form></div></div>
+  const [fieldErrors, setFieldErrors] = useState({})
+  const selectedState = INDIAN_STATES.includes(address?.state) ? address.state : address?.state || ''
+
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    const fields = Object.fromEntries(new FormData(event.currentTarget))
+    const nextErrors = validateFields(fields, ADDRESS_RULES)
+    setFieldErrors(nextErrors)
+    if (Object.keys(nextErrors).length) return
+    onSubmit(event)
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-cocoa/50 p-3 backdrop-blur-sm sm:p-8" onMouseDown={onClose}>
+      <div className="mx-auto max-w-2xl rounded-3xl bg-white shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-cocoa/10 p-5 sm:px-7">
+          <h2 className="font-display text-2xl font-bold">{address ? 'Edit address' : 'Add address'}</h2>
+          <button className="icon-button" onClick={onClose}><X /></button>
+        </div>
+        <form onSubmit={handleSubmit} noValidate className="grid gap-4 p-5 sm:grid-cols-2 sm:p-7">
+          {error && <div className="rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700 sm:col-span-2">{error}</div>}
+          <AddressField name="label" placeholder="Label (Home, Work)" defaultValue={address?.label || 'Home'} error={fieldErrors.label} />
+          <AddressField name="fullName" placeholder="Full name" defaultValue={address?.fullName || user.name} error={fieldErrors.fullName} />
+          <AddressField name="phone" inputMode="numeric" maxLength="10" placeholder="Phone number" defaultValue={address?.phone || user.phone} error={fieldErrors.phone} />
+          <AddressField name="email" type="email" placeholder="Email" defaultValue={address?.email || user.email} error={fieldErrors.email} />
+          <AddressField name="address" className="sm:col-span-2" placeholder="House number, street and area" defaultValue={address?.address} error={fieldErrors.address} />
+          <AddressField name="apartment" className="sm:col-span-2" placeholder="Apartment or landmark (optional)" defaultValue={address?.apartment} />
+          <AddressField name="city" placeholder="City" defaultValue={address?.city} error={fieldErrors.city} />
+          <div>
+            <select name="state" defaultValue={selectedState} className={`select ${fieldErrors.state ? 'select-error' : ''}`}>
+              <option value="">Select state</option>
+              {INDIAN_STATES.map((state) => <option key={state} value={state}>{state}</option>)}
+              {selectedState && !INDIAN_STATES.includes(selectedState) && <option value={selectedState}>{selectedState}</option>}
+            </select>
+            <FieldError message={fieldErrors.state} />
+          </div>
+          <AddressField name="pincode" inputMode="numeric" maxLength="6" placeholder="6-digit pincode" defaultValue={address?.pincode} error={fieldErrors.pincode} />
+          <AddressField name="country" placeholder="Country" defaultValue={address?.country || 'India'} error={fieldErrors.country} />
+          <label className="flex items-center gap-2 text-sm font-bold sm:col-span-2"><input type="checkbox" name="isDefault" defaultChecked={address?.isDefault} /> Make this my default address</label>
+          <div className="flex justify-end gap-3 border-t border-cocoa/10 pt-5 sm:col-span-2">
+            <button type="button" className="button-secondary" onClick={onClose}>Cancel</button>
+            <button disabled={saving} className="button-primary">{saving ? 'Saving…' : 'Save address'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
 }
 
 function AccountPage({ title, subtitle, action, children }) {

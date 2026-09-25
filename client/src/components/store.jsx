@@ -65,13 +65,13 @@ export function Header() {
 
   const search = (event) => {
     event.preventDefault()
-    const query = new FormData(event.currentTarget).get('query')
+    const query = String(new FormData(event.currentTarget).get('query') || '').trim()
+    if (query.length < 2) return
     setSearchOpen(false)
     navigate(`/shop?q=${encodeURIComponent(query)}`)
   }
 
   return <>
-    <div className="bg-cocoa px-4 py-2 text-center text-xs font-semibold tracking-wide text-white">Free shipping above ₹999 · Thoughtfully made in India</div>
     <header className="sticky top-0 z-40 border-b border-cocoa/10 bg-cream/95 backdrop-blur-xl">
       <div className="page-width flex h-18 items-center justify-between gap-4">
         <button className="icon-button lg:hidden" onClick={() => setMenuOpen(true)} aria-label="Open menu"><Menu /></button>
@@ -170,7 +170,7 @@ export function Footer() {
         <p className="max-w-sm text-sm leading-7 text-cream/65">Lovable soft toys made to bring comfort, wonder and very big smiles.</p>
         <div className="mt-5 space-y-3 text-sm text-cream/65">
           <a className="flex w-fit items-center gap-2 transition hover:text-white" href="https://www.instagram.com/bynemssoftteddy/" target="_blank" rel="noreferrer"><InstagramIcon/> Instagram</a>
-          <a className="flex w-fit items-center gap-2 transition hover:text-white" href="mailto:bynemstoysindia@email.com"><EmailIcon/> bynemstoysindia@email.com</a>
+          <a className="flex w-fit items-center gap-2 transition hover:text-white" href="mailto:bynemstoysindia@gmail.com"><EmailIcon/> bynemstoysindia@gmail.com</a>
           <a className="flex w-fit items-center gap-2 transition hover:text-white" href="tel:+919318471492"><PhoneIcon/> +91 93184 71492</a>
           <p className="flex items-center gap-2"><LocationIcon/> Greater Noida, Uttar Pradesh, India</p>
         </div>
@@ -189,6 +189,11 @@ function FooterLinks({ title, links }) {
 
 export function SectionHeading({ eyebrow, title, description }) {
   return <div className="mb-8 max-w-2xl"><p className="eyebrow">{eyebrow}</p><h2 className="section-title">{title}</h2>{description && <p className="mt-3 text-cocoa/60">{description}</p>}</div>
+}
+
+export function FieldError({ message }) {
+  if (!message) return null
+  return <p className="mt-1.5 text-xs font-semibold text-red-600">{message}</p>
 }
 
 export { money }
