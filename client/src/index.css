@@ -92,11 +92,32 @@ th, td { padding: .8rem .7rem; }
   .page-width { width: min(1180px, calc(100% - 4.5rem)); }
 }
 
-.whatsapp-float {
+.whatsapp-dock {
   position: fixed;
   right: 1.15rem;
   bottom: 1.15rem;
   z-index: 45;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .7rem;
+}
+
+.bulk-float {
+  display: inline-flex;
+  min-height: 2.6rem;
+  align-items: center;
+  gap: .4rem;
+  border-radius: 999px;
+  background: var(--color-cocoa);
+  padding: .55rem .95rem;
+  font-size: .78rem;
+  font-weight: 800;
+  color: white;
+  box-shadow: 0 10px 22px rgb(75 48 37 / .22);
+}
+
+.whatsapp-float {
   display: grid;
   width: 3.6rem;
   height: 3.6rem;
@@ -106,9 +127,9 @@ th, td { padding: .8rem .7rem; }
   box-shadow: 0 10px 24px rgb(37 211 102 / .4);
 }
 
+.bulk-float:hover,
 .whatsapp-float:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgb(37 211 102 / .45);
 }
 
 @media (max-width: 640px) {
@@ -119,10 +140,9 @@ th, td { padding: .8rem .7rem; }
   .select-wrap { width: 100%; }
   .select-wrap select { min-width: 0; }
   .form-card { padding: 1.1rem; }
-  .whatsapp-float {
+  .whatsapp-dock {
     right: max(.75rem, env(safe-area-inset-right));
     bottom: max(.75rem, env(safe-area-inset-bottom));
-    width: 3.25rem;
-    height: 3.25rem;
   }
+  .whatsapp-float { width: 3.25rem; height: 3.25rem; }
 }

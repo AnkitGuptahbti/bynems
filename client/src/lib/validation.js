@@ -58,3 +58,17 @@ export const TRACK_RULES = {
   orderId: { required: 'Enter your order ID', pattern: PATTERNS.orderId, message: 'Enter a valid order ID' },
   phone: AUTH_RULES.phone,
 }
+
+export const BULK_RULES = {
+  name: AUTH_RULES.name,
+  phone: AUTH_RULES.phone,
+  quantity: {
+    required: 'Enter how many pieces you need',
+    test: (value) => {
+      const count = Number(value)
+      if (!Number.isInteger(count) || count < 10) return 'Bulk orders start at 10 pieces'
+      return ''
+    },
+  },
+  city: { required: 'Enter your city', min: 2, minMessage: 'Enter a valid city' },
+}

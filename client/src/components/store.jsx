@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { ArrowRight, Heart, Menu, Minus, Plus, Search, ShoppingBag, Star, UserRound, X } from 'lucide-react'
+import { ArrowRight, Heart, Menu, Minus, Package, Plus, Search, ShoppingBag, Star, UserRound, X } from 'lucide-react'
+import { BULK_RULES, validateFields } from '../lib/validation'
 import { useShop } from '../context/ShopContext'
 
 const money = (value) => `₹${Number(value || 0).toLocaleString('en-IN')}`
@@ -165,7 +166,7 @@ function CartDrawer() {
 
 export function Footer() {
   const { categories } = useShop()
-  return <footer className="mt-16 bg-cocoa pb-24 text-cream sm:mt-20 sm:pb-5">
+  return <footer className="mt-16 bg-cocoa pb-28 text-cream sm:mt-20 sm:pb-5">
     <div className="page-width grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-5">
       <div className="sm:col-span-2">
         <div className="mb-4 flex items-center gap-3"><img src="/logo.png" alt="BYNEMSTOYS" className="h-12 w-12 rounded-full" /><strong className="font-display text-xl">BYNEMSTOYS</strong></div>
@@ -198,21 +199,78 @@ export function FieldError({ message }) {
   return <p className="mt-1.5 text-xs font-semibold text-red-600">{message}</p>
 }
 
-const WHATSAPP_URL = 'https://wa.me/919318471492?text=' + encodeURIComponent('Hi BYNEMSTOYS, I have a question about an order.')
+const WHATSAPP_NUMBER = '919318471492'
+const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=` + encodeURIComponent('Hi BYNEMSTOYS, I have a question about an order.')
+
+function WhatsAppIcon({ size = 28 }) {
+  return (
+    <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="white">
+      <path d="M12.04 2C6.58 2 2.15 6.4 2.15 11.84c0 1.74.46 3.44 1.33 4.95L2 22l5.36-1.4a10 10 0 0 0 4.68 1.19h.01c5.46 0 9.89-4.4 9.89-9.85C21.94 6.4 17.5 2 12.04 2Zm5.77 13.9c-.24.68-1.4 1.25-1.93 1.33-.5.07-1.12.1-1.81-.11-.41-.13-.95-.31-1.64-.6-2.89-1.25-4.77-4.16-4.92-4.35-.14-.2-1.17-1.56-1.17-2.97 0-1.42.74-2.11 1-2.4.26-.28.56-.35.75-.35h.54c.17 0 .4 0 .62.47.24.52.8 1.96.87 2.1.07.14.12.31.02.5-.1.2-.14.31-.28.48l-.42.5c-.14.14-.3.3-.13.58.17.28.77 1.27 1.65 2.06 1.14 1.01 2.1 1.33 2.39 1.48.3.14.46.12.64-.07.17-.2.75-.87.95-1.17.2-.3.4-.25.67-.15.26.1 1.68.79 1.97.94.28.14.47.22.54.34.07.12.07.7-.17 1.38Z" />
+    </svg>
+  )
+}
 
 export function WhatsAppButton() {
+  const [open, setOpen] = useState(false)
+  const [errors, setErrors] = useState({})
+
+  const sendBulkOrder = (event) => {
+    event.preventDefault()
+    const fields = Object.fromEntries(new FormData(event.currentTarget))
+    const nextErrors = validateFields(fields, BULK_RULES)
+    setErrors(nextErrors)
+    if (Object.keys(nextErrors).length) return
+    const message = [
+      'Hi BYNEMSTOYS, I want a bulk / wholesale order.',
+      '',
+      `Name: ${fields.name.trim()}`,
+      `Phone: ${fields.phone.trim()}`,
+      `City: ${fields.city.trim()}`,
+      `Quantity: ${fields.quantity.trim()} pieces`,
+      fields.product?.trim() ? `Product: ${fields.product.trim()}` : '',
+      fields.note?.trim() ? `Message: ${fields.note.trim()}` : '',
+    ].filter(Boolean).join('\n')
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer')
+    setOpen(false)
+    setErrors({})
+    event.currentTarget.reset()
+  }
+
   return (
-    <a
-      className="whatsapp-float"
-      href={WHATSAPP_URL}
-      target="_blank"
-      rel="noreferrer"
-      aria-label="Chat on WhatsApp"
-    >
-      <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="white">
-        <path d="M12.04 2C6.58 2 2.15 6.4 2.15 11.84c0 1.74.46 3.44 1.33 4.95L2 22l5.36-1.4a10 10 0 0 0 4.68 1.19h.01c5.46 0 9.89-4.4 9.89-9.85C21.94 6.4 17.5 2 12.04 2Zm5.77 13.9c-.24.68-1.4 1.25-1.93 1.33-.5.07-1.12.1-1.81-.11-.41-.13-.95-.31-1.64-.6-2.89-1.25-4.77-4.16-4.92-4.35-.14-.2-1.17-1.56-1.17-2.97 0-1.42.74-2.11 1-2.4.26-.28.56-.35.75-.35h.54c.17 0 .4 0 .62.47.24.52.8 1.96.87 2.1.07.14.12.31.02.5-.1.2-.14.31-.28.48l-.42.5c-.14.14-.3.3-.13.58.17.28.77 1.27 1.65 2.06 1.14 1.01 2.1 1.33 2.39 1.48.3.14.46.12.64-.07.17-.2.75-.87.95-1.17.2-.3.4-.25.67-.15.26.1 1.68.79 1.97.94.28.14.47.22.54.34.07.12.07.7-.17 1.38Z" />
-      </svg>
-    </a>
+    <>
+      <div className="whatsapp-dock">
+        <button type="button" className="bulk-float" onClick={() => setOpen(true)} aria-label="Click for bulk order">
+          <Package size={16} />
+          <span>Bulk order</span>
+        </button>
+        <a className="whatsapp-float" href={WHATSAPP_URL} target="_blank" rel="noreferrer" aria-label="Chat on WhatsApp">
+          <WhatsAppIcon />
+        </a>
+      </div>
+      {open && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-cocoa/50 p-3 backdrop-blur-sm sm:p-8" onMouseDown={() => { setOpen(false); setErrors({}) }}>
+          <div className="mx-auto max-w-md rounded-3xl bg-white shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-cocoa/10 p-5">
+              <div>
+                <p className="eyebrow">WHOLESALE & EVENTS</p>
+                <h2 className="font-display text-2xl font-bold">Bulk order inquiry</h2>
+              </div>
+              <button className="icon-button" onClick={() => { setOpen(false); setErrors({}) }} aria-label="Close"><X /></button>
+            </div>
+            <form onSubmit={sendBulkOrder} noValidate className="grid gap-4 p-5">
+              <p className="text-sm text-cocoa/55">Tell us what you need for schools, gifting, or wholesale. We will reply on WhatsApp.</p>
+              <div><input className={`input ${errors.name ? 'input-error' : ''}`} name="name" placeholder="Your name" /><FieldError message={errors.name} /></div>
+              <div><input className={`input ${errors.phone ? 'input-error' : ''}`} name="phone" inputMode="numeric" maxLength="10" placeholder="WhatsApp number" /><FieldError message={errors.phone} /></div>
+              <div><input className={`input ${errors.city ? 'input-error' : ''}`} name="city" placeholder="City" /><FieldError message={errors.city} /></div>
+              <div><input className={`input ${errors.quantity ? 'input-error' : ''}`} name="quantity" type="number" min="10" placeholder="Quantity (minimum 10)" /><FieldError message={errors.quantity} /></div>
+              <input className="input" name="product" placeholder="Product or category (optional)" />
+              <textarea className="input min-h-24" name="note" placeholder="Occasion, budget or custom request (optional)" />
+              <button className="button-primary w-full"><WhatsAppIcon size={18} /> Send on WhatsApp</button>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
