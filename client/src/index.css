@@ -14,11 +14,11 @@
 
 @layer base {
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body { margin: 0; background: var(--color-cream); color: var(--color-cocoa); font-family: var(--font-sans); }
+  html { scroll-behavior: smooth; overflow-x: hidden; }
+  body { margin: 0; max-width: 100%; overflow-x: hidden; background: var(--color-cream); color: var(--color-cocoa); font-family: var(--font-sans); }
   button, a, input, select { -webkit-tap-highlight-color: transparent; }
   button, a { cursor: pointer; }
-  img { display: block; }
+  img, video { display: block; max-width: 100%; }
 }
 
 @layer components {
@@ -92,8 +92,37 @@ th, td { padding: .8rem .7rem; }
   .page-width { width: min(1180px, calc(100% - 4.5rem)); }
 }
 
+.whatsapp-float {
+  position: fixed;
+  right: 1.15rem;
+  bottom: 1.15rem;
+  z-index: 45;
+  display: grid;
+  width: 3.6rem;
+  height: 3.6rem;
+  place-items: center;
+  border-radius: 999px;
+  background: #25d366;
+  box-shadow: 0 10px 24px rgb(37 211 102 / .4);
+}
+
+.whatsapp-float:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgb(37 211 102 / .45);
+}
+
 @media (max-width: 640px) {
-  .page-width { width: min(100% - 1.75rem, 1180px); }
+  .page-width { width: min(100% - 1.5rem, 1180px); }
+  .section-space { padding-block: 3rem; }
   .category-card { aspect-ratio: 1; border-radius: .9rem; }
-  .product-card .button-secondary { padding-inline: .7rem; font-size: .75rem; }
+  .product-card .button-secondary { padding-inline: .55rem; font-size: .72rem; min-height: 2.6rem; }
+  .select-wrap { width: 100%; }
+  .select-wrap select { min-width: 0; }
+  .form-card { padding: 1.1rem; }
+  .whatsapp-float {
+    right: max(.75rem, env(safe-area-inset-right));
+    bottom: max(.75rem, env(safe-area-inset-bottom));
+    width: 3.25rem;
+    height: 3.25rem;
+  }
 }

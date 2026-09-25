@@ -73,11 +73,11 @@ export function Header() {
 
   return <>
     <header className="sticky top-0 z-40 border-b border-cocoa/10 bg-cream/95 backdrop-blur-xl">
-      <div className="page-width flex h-18 items-center justify-between gap-4">
+      <div className="page-width flex h-16 items-center justify-between gap-2 sm:h-18 sm:gap-4">
         <button className="icon-button lg:hidden" onClick={() => setMenuOpen(true)} aria-label="Open menu"><Menu /></button>
-        <Link to="/" className="flex items-center gap-2.5">
-          <img src="/logo.png" className="h-11 w-11 rounded-full object-cover" alt="BYNEMSTOYS" />
-          <span className="font-display text-lg font-bold tracking-tight text-cocoa sm:text-xl">BYNEMSTOYS</span>
+        <Link to="/" className="flex min-w-0 items-center gap-2">
+          <img src="/logo.png" className="h-9 w-9 shrink-0 rounded-full object-cover sm:h-11 sm:w-11" alt="BYNEMSTOYS" />
+          <span className="truncate font-display text-base font-bold tracking-tight text-cocoa sm:text-xl">BYNEMSTOYS</span>
         </Link>
         <nav className="hidden items-center gap-7 text-sm font-semibold lg:flex">
           {navItems.map(([label, href, active]) => label === 'Categories' ? <a key={label} href={href} className={navClass(active)}>{label}</a> : <Link key={label} to={href} className={navClass(active)}>{label}</Link>)}
@@ -101,10 +101,12 @@ export function Header() {
       </aside>
     </div>}
     {searchOpen && <div className="fixed inset-0 z-50 bg-cocoa/45 px-4 pt-24 backdrop-blur-md" onClick={() => setSearchOpen(false)}>
-      <form onSubmit={search} className="mx-auto flex max-w-2xl overflow-hidden rounded-2xl bg-white p-2 shadow-2xl" onClick={(event) => event.stopPropagation()}>
-        <Search className="mx-3 self-center text-cocoa/50" />
-        <input name="query" autoFocus className="min-w-0 flex-1 bg-transparent py-3 outline-none" placeholder="Search teddy bears, gifts, characters..." />
-        <button className="button-primary">Search</button>
+      <form onSubmit={search} className="mx-auto flex max-w-2xl flex-col gap-2 overflow-hidden rounded-2xl bg-white p-2 shadow-2xl sm:flex-row" onClick={(event) => event.stopPropagation()}>
+        <div className="flex min-w-0 flex-1 items-center">
+          <Search className="mx-3 shrink-0 self-center text-cocoa/50" />
+          <input name="query" autoFocus className="min-w-0 flex-1 bg-transparent py-3 outline-none" placeholder="Search teddy bears, gifts..." />
+        </div>
+        <button className="button-primary sm:w-auto">Search</button>
       </form>
     </div>}
     <CartDrawer />
@@ -124,14 +126,14 @@ export function ProductCard({ product }) {
     <div className="relative aspect-square overflow-hidden rounded-[1.4rem] bg-blush">
       <Link to={`/products/${product.slug || id}`}><img src={image} alt={product.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /></Link>
       <button onClick={() => toggleWishlist(id)} className={`absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 shadow-sm ${wishlist.includes(id) ? 'text-rose' : 'text-cocoa'}`} aria-label="Add to wishlist"><Heart size={18} fill={wishlist.includes(id) ? 'currentColor' : 'none'} /></button>
-      <div className="absolute left-3 top-3 flex gap-1">{product.isNew && <span className="badge">NEW</span>}{product.bestseller && <span className="badge bg-cocoa!">BESTSELLER</span>}</div>
+      <div className="absolute left-2 top-2 flex max-w-[70%] flex-wrap gap-1">{product.isNew && <span className="badge">NEW</span>}{product.bestseller && <span className="badge bg-cocoa!">BESTSELLER</span>}</div>
     </div>
-    <div className="px-1 pt-4">
-      <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-cocoa/50">{product.categoryName || String(product.category).replaceAll('-', ' ')}</p>
-      <Link to={`/products/${product.slug || id}`} className="font-display text-lg font-bold text-cocoa">{product.name}</Link>
+    <div className="px-0.5 pt-3 sm:px-1 sm:pt-4">
+      <p className="mb-1 truncate text-[10px] font-semibold uppercase tracking-wider text-cocoa/50 sm:text-xs sm:tracking-widest">{product.categoryName || String(product.category).replaceAll('-', ' ')}</p>
+      <Link to={`/products/${product.slug || id}`} className="line-clamp-2 font-display text-sm font-bold text-cocoa sm:text-lg">{product.name}</Link>
       {product.rating > 0 && <div className="mt-2 flex items-center gap-1 text-sm"><Star size={14} className="fill-gold text-gold" /><b>{product.rating}</b><span className="text-cocoa/40">({product.reviewCount || 0})</span></div>}
-      <div className="mt-3 flex items-baseline gap-2"><strong className="text-lg">{money(product.price)}</strong><del className="text-sm text-cocoa/40">{money(product.mrp)}</del><span className="text-xs font-bold text-green-700">{discount}% off</span></div>
-      <button onClick={() => addToCart(product, product.defaultVariantId || product.variants?.[0]?._id)} className="button-secondary mt-4 w-full"><ShoppingBag size={17} /> Add to cart</button>
+      <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1 sm:mt-3"><strong className="text-base sm:text-lg">{money(product.price)}</strong><del className="text-xs text-cocoa/40 sm:text-sm">{money(product.mrp)}</del><span className="text-xs font-bold text-green-700">{discount}% off</span></div>
+      <button onClick={() => addToCart(product, product.defaultVariantId || product.variants?.[0]?._id)} className="button-secondary mt-3 w-full sm:mt-4"><ShoppingBag size={16} /> Add to cart</button>
     </div>
   </article>
 }
@@ -149,7 +151,7 @@ function CartDrawer() {
           const variant = item.variant || product.variants?.find((entry) => String(entry._id) === String(item.variantId))
           const image = variant?.images?.[0]?.url || product.image || product.images?.[0]?.url || product.images?.[0]
           return <div key={`${id}-${item.variantId || item.size}`} className="flex gap-3">
-            <img src={image} className="h-22 w-22 rounded-2xl object-cover" alt="" />
+            <img src={image} className="h-20 w-20 shrink-0 rounded-2xl object-cover" alt="" />
             <div className="min-w-0 flex-1"><h3 className="truncate font-bold">{product.name}</h3><p className="text-sm text-cocoa/50">{variant?.color || item.color || '—'} · {variant?.label || item.size}</p><strong>{money(variant?.price || product.price)}</strong>
               <div className="mt-2 flex items-center justify-between"><div className="flex items-center rounded-full border border-cocoa/15"><button className="p-1.5" onClick={() => updateQuantity(id, item.variantId, quantity - 1)}><Minus size={14} /></button><span className="w-7 text-center text-sm">{quantity}</span><button className="p-1.5" onClick={() => updateQuantity(id, item.variantId, quantity + 1)}><Plus size={14} /></button></div><button onClick={() => removeFromCart(id, item.variantId)} className="text-xs font-bold text-rose">REMOVE</button></div>
             </div>
@@ -163,14 +165,14 @@ function CartDrawer() {
 
 export function Footer() {
   const { categories } = useShop()
-  return <footer className="mt-20 bg-cocoa text-cream">
+  return <footer className="mt-16 bg-cocoa pb-24 text-cream sm:mt-20 sm:pb-5">
     <div className="page-width grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-5">
       <div className="sm:col-span-2">
         <div className="mb-4 flex items-center gap-3"><img src="/logo.png" alt="BYNEMSTOYS" className="h-12 w-12 rounded-full" /><strong className="font-display text-xl">BYNEMSTOYS</strong></div>
         <p className="max-w-sm text-sm leading-7 text-cream/65">Lovable soft toys made to bring comfort, wonder and very big smiles.</p>
         <div className="mt-5 space-y-3 text-sm text-cream/65">
           <a className="flex w-fit items-center gap-2 transition hover:text-white" href="https://www.instagram.com/bynemssoftteddy/" target="_blank" rel="noreferrer"><InstagramIcon/> Instagram</a>
-          <a className="flex w-fit items-center gap-2 transition hover:text-white" href="mailto:bynemstoysindia@gmail.com"><EmailIcon/> bynemstoysindia@gmail.com</a>
+          <a className="flex w-fit max-w-full items-center gap-2 break-all transition hover:text-white" href="mailto:bynemstoysindia@gmail.com"><span className="shrink-0"><EmailIcon/></span> bynemstoysindia@gmail.com</a>
           <a className="flex w-fit items-center gap-2 transition hover:text-white" href="tel:+919318471492"><PhoneIcon/> +91 93184 71492</a>
           <p className="flex items-center gap-2"><LocationIcon/> Greater Noida, Uttar Pradesh, India</p>
         </div>
@@ -194,6 +196,24 @@ export function SectionHeading({ eyebrow, title, description }) {
 export function FieldError({ message }) {
   if (!message) return null
   return <p className="mt-1.5 text-xs font-semibold text-red-600">{message}</p>
+}
+
+const WHATSAPP_URL = 'https://wa.me/919318471492?text=' + encodeURIComponent('Hi BYNEMSTOYS, I have a question about an order.')
+
+export function WhatsAppButton() {
+  return (
+    <a
+      className="whatsapp-float"
+      href={WHATSAPP_URL}
+      target="_blank"
+      rel="noreferrer"
+      aria-label="Chat on WhatsApp"
+    >
+      <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="white">
+        <path d="M12.04 2C6.58 2 2.15 6.4 2.15 11.84c0 1.74.46 3.44 1.33 4.95L2 22l5.36-1.4a10 10 0 0 0 4.68 1.19h.01c5.46 0 9.89-4.4 9.89-9.85C21.94 6.4 17.5 2 12.04 2Zm5.77 13.9c-.24.68-1.4 1.25-1.93 1.33-.5.07-1.12.1-1.81-.11-.41-.13-.95-.31-1.64-.6-2.89-1.25-4.77-4.16-4.92-4.35-.14-.2-1.17-1.56-1.17-2.97 0-1.42.74-2.11 1-2.4.26-.28.56-.35.75-.35h.54c.17 0 .4 0 .62.47.24.52.8 1.96.87 2.1.07.14.12.31.02.5-.1.2-.14.31-.28.48l-.42.5c-.14.14-.3.3-.13.58.17.28.77 1.27 1.65 2.06 1.14 1.01 2.1 1.33 2.39 1.48.3.14.46.12.64-.07.17-.2.75-.87.95-1.17.2-.3.4-.25.67-.15.26.1 1.68.79 1.97.94.28.14.47.22.54.34.07.12.07.7-.17 1.38Z" />
+      </svg>
+    </a>
+  )
 }
 
 export { money }

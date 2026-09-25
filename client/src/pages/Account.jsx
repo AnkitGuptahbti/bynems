@@ -119,7 +119,7 @@ export function Account() {
 
   return (
     <main className="page-width grid min-h-[70vh] place-items-center py-12">
-      <div className="w-full max-w-md rounded-[2rem] bg-white p-7 shadow-sm">
+      <div className="w-full max-w-md rounded-[2rem] bg-white p-5 shadow-sm sm:p-7">
         <div className="text-center">
           <img src="/logo.png" alt="BYNEMSTOYS" className="mx-auto h-16 w-16 rounded-full" />
           <h1 className="mt-4 font-display text-3xl font-bold">{mode === 'login' ? 'Welcome back' : 'Join our world of cute'}</h1>
@@ -177,7 +177,7 @@ function GoogleSignIn({ onCredential }) {
         theme: 'outline',
         size: 'large',
         shape: 'pill',
-        width: 320,
+        width: Math.min(320, Math.max(240, containerRef.current.parentElement?.clientWidth || 280)),
         text: 'continue_with',
       })
     }

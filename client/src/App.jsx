@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
-import { Header, Footer } from './components/store'
+import { Header, Footer, WhatsAppButton } from './components/store'
 import { ShopProvider } from './context/ShopContext'
 import Home from './pages/Home'
 import { Cart, Checkout, OrderSuccess, ProductDetails, Shop, TrackOrder, Wishlist } from './pages/Commerce'
@@ -58,6 +58,7 @@ function StoreRoutes() {
       <Route path="*" element={<Home />} />
     </Routes>
     {!isAdmin && <Footer />}
+    {!isAdmin && <WhatsAppButton />}
   </>
 }
 

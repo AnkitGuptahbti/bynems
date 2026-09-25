@@ -97,7 +97,7 @@ function Newsletter() {
     setEmail('')
   }
 
-  return <section className="page-width pb-8"><div className="rounded-[2.5rem] bg-cocoa px-6 py-14 text-center text-white md:px-14"><p className="eyebrow text-peach!">A LITTLE JOY IN YOUR INBOX</p><h2 className="font-display text-3xl font-bold md:text-5xl">Get the cutest updates</h2><p className="mx-auto mt-3 max-w-xl text-white/60">New friends, gifting ideas and members-only treats. No clutter, only cuddles.</p><form onSubmit={submit} className="mx-auto mt-7 max-w-lg" noValidate>
+  return <section className="page-width pb-8"><div className="rounded-[1.75rem] bg-cocoa px-5 py-10 text-center text-white sm:rounded-[2.5rem] sm:px-6 sm:py-14 md:px-14"><p className="eyebrow text-peach!">A LITTLE JOY IN YOUR INBOX</p><h2 className="font-display text-3xl font-bold md:text-5xl">Get the cutest updates</h2><p className="mx-auto mt-3 max-w-xl text-white/60">New friends, gifting ideas and members-only treats. No clutter, only cuddles.</p><form onSubmit={submit} className="mx-auto mt-7 max-w-lg" noValidate>
     <div className="flex flex-col gap-2 rounded-2xl bg-white p-2 sm:flex-row">
       <input type="email" value={email} onChange={(event) => { setEmail(event.target.value); setError(''); setMessage('') }} placeholder="Your email address" className="min-w-0 flex-1 rounded-xl px-4 py-3 text-cocoa outline-none" />
       <button className="button-primary bg-rose!">Subscribe</button>

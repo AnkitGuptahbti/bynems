@@ -138,7 +138,7 @@ export function RefundPolicy() {
 }
 
 function InfoPage({ eyebrow, title, intro, updated = false, children }) {
-  return <main><section className="hero-bg border-b border-cocoa/10"><div className="page-width py-14 text-center sm:py-20"><p className="eyebrow">{eyebrow}</p><h1 className="font-display text-4xl font-bold tracking-tight sm:text-6xl">{title}</h1><p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-cocoa/60">{intro}</p>{updated && <p className="mt-4 text-xs font-bold uppercase tracking-wider text-cocoa/40">Last updated: 20 September 2026</p>}</div></section><div className="page-width max-w-5xl! space-y-7 py-12 sm:py-16">{children}</div></main>
+  return <main><section className="hero-bg border-b border-cocoa/10"><div className="page-width py-10 text-center sm:py-20"><p className="eyebrow">{eyebrow}</p><h1 className="font-display text-3xl font-bold tracking-tight sm:text-6xl">{title}</h1><p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-cocoa/60">{intro}</p>{updated && <p className="mt-4 text-xs font-bold uppercase tracking-wider text-cocoa/40">Last updated: 20 September 2026</p>}</div></section><div className="page-width max-w-5xl! space-y-7 py-12 sm:py-16">{children}</div></main>
 }
 
 function Section({ title, children }) {
