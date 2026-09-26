@@ -1,6 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
-const commerce = require('../controllers/commerce.controller');
+const payments = require('../controllers/payment.controller');
 const { protect, validate } = require('../middleware');
 
 const router = express.Router();
@@ -17,7 +17,7 @@ const validatePaymentVerification = [
 ];
 
 router.use(protect);
-router.post('/create', validateCreatePayment, commerce.createPayment);
-router.post('/verify', validatePaymentVerification, commerce.verifyPayment);
+router.post('/create', validateCreatePayment, payments.createPayment);
+router.post('/verify', validatePaymentVerification, payments.verifyPayment);
 
 module.exports = router;

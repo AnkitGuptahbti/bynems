@@ -1,6 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
-const commerce = require('../controllers/commerce.controller');
+const shipments = require('../controllers/shipment.controller');
 const { protect, authorize, validate } = require('../middleware');
 
 const router = express.Router();
@@ -12,8 +12,8 @@ const validateCreateShipment = [
 ];
 
 router.use(protect);
-router.post('/create', adminOnly, validateCreateShipment, commerce.createShipment);
-router.get('/:orderId', commerce.getShipment);
-router.get('/:orderId/track', commerce.trackShipment);
+router.post('/create', adminOnly, validateCreateShipment, shipments.createShipment);
+router.get('/:orderId', shipments.getShipment);
+router.get('/:orderId/track', shipments.trackShipment);
 
 module.exports = router;

@@ -1,6 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
-const commerce = require('../controllers/commerce.controller');
+const coupons = require('../controllers/coupon.controller');
 const { validate } = require('../middleware');
 
 const router = express.Router();
@@ -11,6 +11,6 @@ const validateCoupon = [
   validate,
 ];
 
-router.post('/validate', validateCoupon, commerce.validateCoupon);
+router.post('/validate', validateCoupon, coupons.validateCoupon);
 
 module.exports = router;

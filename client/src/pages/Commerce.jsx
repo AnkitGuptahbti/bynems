@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, ChevronDown, Heart, MapPin, Minus, PackageCheck, Plus, Search, ShieldCheck, ShoppingBag, Star, Truck } from 'lucide-react'
 import { FieldError, ProductCard, SectionHeading, money } from '../components/store'
 import { useShop } from '../context/ShopContext'
-import { AddressForm } from './AccountDetails'
+import { AddressForm, ReviewForm } from './AccountDetails'
 import { TRACK_RULES, validateFields } from '../lib/validation'
 
 export function Shop() {
@@ -112,8 +112,89 @@ export function ProductDetails() {
         <details className="product-detail" open><summary>Description</summary><p>{product.description}</p></details><details className="product-detail"><summary>Shipping & returns</summary><p>Dispatched within 1–2 business days. Easy returns within 7 days of delivery.</p></details>
       </div>
     </div>
+    <ProductReviews productId={id} productName={product.name} />
     <section className="pt-20"><SectionHeading eyebrow="MORE TO LOVE" title="You may also like" /><div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-6">{products.filter((item) => item !== product).slice(0,4).map((item) => <ProductCard key={item.id || item._id} product={item} />)}</div></section>
   </main>
+}
+
+function ProductReviews({ productId, productName }) {
+  const { user, apiRequest } = useShop()
+  const [reviews, setReviews] = useState([])
+  const [eligibility, setEligibility] = useState({ canReview: false, alreadyReviewed: false })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [formOpen, setFormOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState('')
+
+  useEffect(() => {
+    let active = true
+    setLoading(true)
+    setError('')
+    Promise.all([
+      apiRequest(`/reviews/${productId}`),
+      user ? apiRequest(`/reviews/${productId}/eligibility`) : Promise.resolve({ canReview: false, alreadyReviewed: false }),
+    ])
+      .then(([reviewData, status]) => {
+        if (!active) return
+        setReviews(reviewData.reviews || [])
+        setEligibility(status)
+      })
+      .catch((requestError) => { if (active) setError(requestError.message) })
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
+  }, [apiRequest, productId, user])
+
+  const saveReview = async ({ rating, comment }) => {
+    setSaving(true)
+    setFormError('')
+    try {
+      await apiRequest(`/reviews/${productId}`, { method: 'POST', body: JSON.stringify({ rating, comment }) })
+      setEligibility({ canReview: false, alreadyReviewed: true, status: 'PENDING' })
+      setFormOpen(false)
+    } catch (requestError) {
+      setFormError(requestError.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const average = reviews.length ? Math.round((reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviews.length) * 10) / 10 : 0
+
+  return (
+    <section className="pt-16">
+      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <p className="eyebrow">VERIFIED REVIEWS</p>
+          <h2 className="section-title">What families say</h2>
+        </div>
+        {eligibility.canReview && <button type="button" className="button-primary shrink-0" onClick={() => { setFormError(''); setFormOpen(true) }}><Star size={16} /> Write a review</button>}
+      </div>
+      {average > 0 && <div className="mb-6 flex items-center gap-2"><span className="flex items-center gap-1 rounded-full bg-green-700 px-2 py-1 text-xs font-bold text-white">{average} <Star size={11} fill="white" /></span><span className="text-sm text-cocoa/50">{reviews.length} verified review{reviews.length === 1 ? '' : 's'}</span></div>}
+      {eligibility.status === 'PENDING' && <p className="mb-5 text-sm font-bold text-amber-700">Your review is awaiting approval. It will appear here after we publish it.</p>}
+      {eligibility.status === 'APPROVED' && <p className="mb-5 text-sm font-bold text-green-700">You have already reviewed this product.</p>}
+      {eligibility.status === 'REJECTED' && <p className="mb-5 text-sm font-bold text-cocoa/55">Your review was not published.</p>}
+      {eligibility.alreadyReviewed && !eligibility.status && <p className="mb-5 text-sm font-bold text-green-700">You have already reviewed this product.</p>}
+      {!user && <p className="mb-5 text-sm text-cocoa/55">Bought this? After delivery, <Link to="/account" className="font-bold underline">sign in</Link> from My orders to leave a review.</p>}
+      {user && !eligibility.canReview && !eligibility.alreadyReviewed && !loading && <p className="mb-5 text-sm text-cocoa/55">Reviews open after your order is marked delivered.</p>}
+      {loading && <p className="rounded-3xl bg-white p-6 text-sm text-cocoa/50">Loading reviews…</p>}
+      {error && <p className="rounded-3xl bg-red-50 p-6 text-sm font-semibold text-red-700">{error}</p>}
+      {!loading && !error && !reviews.length && <div className="rounded-3xl bg-white p-8 text-center"><Star className="mx-auto text-cocoa/25" size={36} /><p className="mt-3 font-bold">No reviews yet</p><p className="mt-1 text-sm text-cocoa/50">Be the first after your order is delivered.</p></div>}
+      <div className="space-y-4">
+        {reviews.map((review) => (
+          <article key={review._id} className="rounded-3xl bg-white p-5 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <strong>{review.user?.name || 'Customer'}</strong>
+              <span className="flex items-center gap-0.5 text-gold">{[1, 2, 3, 4, 5].map((star) => <Star key={star} size={14} className={star <= review.rating ? 'fill-gold' : 'text-cocoa/20'} />)}</span>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-cocoa/70">{review.comment}</p>
+            {review.createdAt && <p className="mt-2 text-xs text-cocoa/40">{new Date(review.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>}
+          </article>
+        ))}
+      </div>
+      {formOpen && <ReviewForm productName={productName} saving={saving} error={formError} onSubmit={saveReview} onClose={() => { setFormOpen(false); setFormError('') }} />}
+    </section>
+  )
 }
 
 export function Cart() {

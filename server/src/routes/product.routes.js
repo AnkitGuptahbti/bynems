@@ -1,6 +1,6 @@
 const express = require('express');
 const { query } = require('express-validator');
-const catalog = require('../controllers/catalog.controller');
+const products = require('../controllers/product.controller');
 const { validate } = require('../middleware');
 
 const router = express.Router();
@@ -11,7 +11,7 @@ const validateProductList = [
   validate,
 ];
 
-router.get('/', validateProductList, catalog.listProducts);
-router.get('/:id', catalog.getProduct);
+router.get('/', validateProductList, products.listProducts);
+router.get('/:id', products.getProduct);
 
 module.exports = router;

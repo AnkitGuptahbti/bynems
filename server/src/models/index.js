@@ -190,7 +190,8 @@ const reviewSchema = new Schema({
   rating: { type: Number, required: true, min: 1, max: 5 },
   title: String,
   comment: { type: String, required: true, maxlength: 2000 },
-  isApproved: { type: Boolean, default: true },
+  status: { type: String, enum: ['PENDING', 'APPROVED', 'REJECTED'], default: 'PENDING', index: true },
+  isApproved: { type: Boolean, default: false },
 }, { timestamps: true });
 reviewSchema.index({ user: 1, product: 1 }, { unique: true });
 

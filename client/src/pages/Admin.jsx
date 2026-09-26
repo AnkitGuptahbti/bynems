@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import {
-  AlertTriangle, Box, Boxes, ClipboardList, Edit3, ExternalLink, FolderTree,
-  LayoutDashboard, LogOut, Package, Plus, Search, ShoppingBag, Trash2,
+  AlertTriangle, Box, Boxes, Check, ClipboardList, Edit3, ExternalLink, FolderTree,
+  LayoutDashboard, LogOut, Package, Plus, Search, ShoppingBag, Star, Trash2,
   Upload, Users, X,
 } from 'lucide-react'
 import { money } from '../components/store'
@@ -13,12 +13,13 @@ const sections = [
   ['products', 'Products', Boxes],
   ['categories', 'Categories', FolderTree],
   ['orders', 'Orders', ClipboardList],
+  ['reviews', 'Reviews', Star],
 ]
 
 export function Admin() {
   const { user, setUser, apiRequest } = useShop()
   const [section, setSection] = useState('dashboard')
-  const [data, setData] = useState({ summary: null, products: [], categories: [], orders: [] })
+  const [data, setData] = useState({ summary: null, products: [], categories: [], orders: [], reviews: [] })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -29,17 +30,19 @@ export function Admin() {
     setLoading(true)
     setError('')
     try {
-      const [summary, products, categories, orders] = await Promise.all([
+      const [summary, products, categories, orders, reviews] = await Promise.all([
         apiRequest('/admin/summary'),
         apiRequest('/admin/products?limit=100'),
         apiRequest('/admin/categories'),
         apiRequest('/admin/orders'),
+        apiRequest('/admin/reviews'),
       ])
       setData({
         summary: summary.summary,
         products: products.products,
         categories: categories.categories,
         orders: orders.orders,
+        reviews: reviews.reviews,
       })
     } catch (requestError) {
       setError(requestError.message)
@@ -75,6 +78,17 @@ export function Admin() {
     try {
       await apiRequest(`/admin/orders/${id}`, { method: 'PATCH', body: JSON.stringify(updates) })
       await completeAction('Order updated')
+    } catch (requestError) {
+      setError(requestError.message)
+    }
+  }
+
+  const moderateReview = async (review, status) => {
+    const action = status === 'APPROVED' ? 'Approve' : 'Reject'
+    if (!window.confirm(`${action} this review for ${review.product?.name || 'this product'}?`)) return
+    try {
+      await apiRequest(`/admin/reviews/${review._id}`, { method: 'PATCH', body: JSON.stringify({ status }) })
+      await completeAction(status === 'APPROVED' ? 'Review approved and published' : 'Review rejected')
     } catch (requestError) {
       setError(requestError.message)
     }
@@ -117,6 +131,7 @@ export function Admin() {
         {!loading && section === 'products' && <Products products={data.products} onEdit={(item) => setModal({ type: 'product', item })} onDelete={(item) => remove('products', item)} />}
         {!loading && section === 'categories' && <Categories categories={data.categories} onEdit={(item) => setModal({ type: 'category', item })} onDelete={(item) => remove('categories', item)} />}
         {!loading && section === 'orders' && <Orders orders={data.orders} onUpdate={updateOrder} />}
+        {!loading && section === 'reviews' && <Reviews reviews={data.reviews} onModerate={moderateReview} />}
       </section>
 
       {modal?.type === 'product' && <ProductForm item={modal.item} categories={data.categories.filter((category) => category.isActive)} apiRequest={apiRequest} onClose={() => setModal(null)} onSaved={() => completeAction(`Product ${modal.item ? 'updated' : 'created'}`)} />}
@@ -132,9 +147,10 @@ function Dashboard({ summary }) {
     [String(summary?.customers || 0), 'Customers', Users],
     [String(summary?.products || 0), 'Active products', ShoppingBag],
     [String(summary?.lowStock || 0), 'Low stock', AlertTriangle],
+    [String(summary?.pendingReviews || 0), 'Pending reviews', Star],
   ]
   return <>
-    <div className="grid grid-cols-2 gap-4 xl:grid-cols-5">{cards.map(([value, label, Icon]) => <div key={label} className="rounded-2xl bg-white p-5 shadow-sm"><Icon className="mb-5 text-rose" /><strong className="block font-display text-2xl">{value}</strong><span className="text-sm text-cocoa/50">{label}</span></div>)}</div>
+    <div className="grid grid-cols-2 gap-4 xl:grid-cols-6">{cards.map(([value, label, Icon]) => <div key={label} className="rounded-2xl bg-white p-5 shadow-sm"><Icon className="mb-5 text-rose" /><strong className="block font-display text-2xl">{value}</strong><span className="text-sm text-cocoa/50">{label}</span></div>)}</div>
     <div className="mt-6 rounded-3xl bg-white p-5 shadow-sm"><h2 className="font-display text-xl font-bold">Recent orders</h2><OrderTable orders={summary?.recentOrders || []} /></div>
   </>
 }
@@ -161,6 +177,57 @@ function Orders({ orders, onUpdate }) {
   const [query, setQuery] = useState('')
   const filtered = orders.filter((order) => `${order.orderId} ${order.user?.name || ''} ${order.shippingAddress?.fullName || ''}`.toLowerCase().includes(query.toLowerCase()))
   return <Panel title={`${orders.length} orders`} query={query} setQuery={setQuery}><OrderTable orders={filtered} editable onUpdate={onUpdate} />{!filtered.length && <Empty text="No orders found" />}</Panel>
+}
+
+function reviewTone(status) {
+  if (status === 'APPROVED') return 'bg-green-100 text-green-700'
+  if (status === 'REJECTED') return 'bg-red-100 text-red-700'
+  return 'bg-amber-100 text-amber-800'
+}
+
+function Reviews({ reviews, onModerate }) {
+  const [query, setQuery] = useState('')
+  const [status, setStatus] = useState('PENDING')
+  const filtered = reviews.filter((review) => {
+    const matchesStatus = status === 'ALL' || review.status === status
+    const haystack = `${review.product?.name || ''} ${review.user?.name || ''} ${review.user?.email || ''} ${review.comment || ''}`.toLowerCase()
+    return matchesStatus && haystack.includes(query.toLowerCase())
+  })
+  return <Panel title={`${reviews.filter((review) => review.status === 'PENDING').length} pending · ${reviews.length} total`} query={query} setQuery={setQuery}>
+    <div className="mb-5 flex flex-wrap gap-2">
+      {['PENDING', 'APPROVED', 'REJECTED', 'ALL'].map((value) => (
+        <button key={value} type="button" onClick={() => setStatus(value)} className={`rounded-full px-4 py-2 text-xs font-bold ${status === value ? 'bg-cocoa text-white' : 'bg-cream text-cocoa/60'}`}>
+          {value === 'ALL' ? 'All' : value.charAt(0) + value.slice(1).toLowerCase()}
+        </button>
+      ))}
+    </div>
+    <div className="space-y-4">
+      {filtered.map((review) => (
+        <article key={review._id} className="rounded-2xl border border-cocoa/10 p-4 sm:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row">
+            <img src={review.product?.images?.[0]?.url} alt="" className="h-16 w-16 rounded-xl bg-cream object-cover" />
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <strong className="block">{review.product?.name || 'Product'}</strong>
+                  <span className="text-xs text-cocoa/45">{review.user?.name || 'Customer'}{review.user?.email ? ` · ${review.user.email}` : ''}</span>
+                </div>
+                <span className={`rounded-full px-2 py-1 text-xs font-bold ${reviewTone(review.status)}`}>{review.status}</span>
+              </div>
+              <div className="mt-2 flex items-center gap-0.5 text-gold">{[1, 2, 3, 4, 5].map((star) => <Star key={star} size={14} className={star <= review.rating ? 'fill-gold' : 'text-cocoa/20'} />)}</div>
+              <p className="mt-3 text-sm leading-6 text-cocoa/70">{review.comment}</p>
+              <p className="mt-2 text-xs text-cocoa/40">{review.createdAt ? new Date(review.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</p>
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap justify-end gap-2">
+            {review.status !== 'APPROVED' && <button type="button" className="button-primary min-h-10!" onClick={() => onModerate(review, 'APPROVED')}><Check size={16} /> Approve</button>}
+            {review.status !== 'REJECTED' && <button type="button" className="button-secondary min-h-10! text-red-700" onClick={() => onModerate(review, 'REJECTED')}><X size={16} /> Reject</button>}
+          </div>
+        </article>
+      ))}
+    </div>
+    {!filtered.length && <Empty text={status === 'PENDING' ? 'No reviews waiting for approval' : 'No reviews found'} />}
+  </Panel>
 }
 
 function OrderTable({ orders, editable = false, onUpdate }) {

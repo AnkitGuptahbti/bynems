@@ -1,10 +1,10 @@
-const { Order, Product, User, Coupon, Category } = require('../models');
+const { Order, Product, User, Coupon, Category, Review } = require('../models');
 const { ApiError, asyncHandler } = require('../utils');
 const { uploadMany } = require('../services/cloudinary.service');
 
 const summary = asyncHandler(async (req, res) => {
   req.log.info({ operation: 'admin.summary' }, 'Controller invoked');
-  const [metrics, customers, products, lowStock, recentOrders] = await Promise.all([
+  const [metrics, customers, products, lowStock, recentOrders, pendingReviews] = await Promise.all([
     Order.aggregate([
       { $match: { orderStatus: { $ne: 'CANCELLED' } } },
       { $group: { _id: null, orders: { $sum: 1 }, revenue: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'PAID'] }, '$totalAmount', 0] } } } },
@@ -13,8 +13,9 @@ const summary = asyncHandler(async (req, res) => {
     Product.countDocuments({ isActive: true }),
     Product.countDocuments({ isActive: true, variants: { $elemMatch: { stock: { $lte: 5 } } } }),
     Order.find().populate('user', 'name email').sort('-createdAt').limit(10),
+    Review.countDocuments({ $or: [{ status: 'PENDING' }, { status: { $exists: false }, isApproved: false }] }),
   ]);
-  res.json({ success: true, summary: { orders: metrics[0]?.orders || 0, revenue: metrics[0]?.revenue || 0, customers, products, lowStock, recentOrders } });
+  res.json({ success: true, summary: { orders: metrics[0]?.orders || 0, revenue: metrics[0]?.revenue || 0, customers, products, lowStock, pendingReviews, recentOrders } });
 });
 
 const listProducts = asyncHandler(async (req, res) => {

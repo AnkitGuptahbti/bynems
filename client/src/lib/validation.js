@@ -59,6 +59,18 @@ export const TRACK_RULES = {
   phone: AUTH_RULES.phone,
 }
 
+export const REVIEW_RULES = {
+  rating: {
+    required: 'Choose a rating from 1 to 5',
+    test: (value) => {
+      const rating = Number(value)
+      if (!Number.isInteger(rating) || rating < 1 || rating > 5) return 'Choose a rating from 1 to 5'
+      return ''
+    },
+  },
+  comment: { required: 'Write a short review', min: 3, minMessage: 'Write at least 3 characters', max: 2000, maxMessage: 'Keep your review under 2000 characters' },
+}
+
 export const BULK_RULES = {
   name: AUTH_RULES.name,
   phone: AUTH_RULES.phone,

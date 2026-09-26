@@ -1,7 +1,9 @@
 const express = require('express');
 const { body, param } = require('express-validator');
 const admin = require('../controllers/admin.controller');
-const catalog = require('../controllers/catalog.controller');
+const products = require('../controllers/product.controller');
+const categories = require('../controllers/category.controller');
+const reviews = require('../controllers/review.controller');
 const { protect, authorize, validate, upload } = require('../middleware');
 
 const router = express.Router();
@@ -50,19 +52,24 @@ const validateCouponId = [
   param('id').isMongoId().withMessage('Coupon not found'),
   validate,
 ];
+const validateModerateReview = [
+  param('id').isMongoId().withMessage('Review not found'),
+  body('status').isIn(['APPROVED', 'REJECTED']).withMessage('Choose approve or reject'),
+  validate,
+];
 const uploadProductImages = upload.array('images', 10);
 
 router.use(adminOnly);
 router.get('/summary', admin.summary);
 router.get('/products', admin.listProducts);
-router.post('/products', validateCreateProduct, catalog.createProduct);
-router.patch('/products/:id', validateProductId, validateCreateProduct, catalog.updateProduct);
-router.delete('/products/:id', validateProductId, catalog.deleteProduct);
+router.post('/products', validateCreateProduct, products.createProduct);
+router.patch('/products/:id', validateProductId, validateCreateProduct, products.updateProduct);
+router.delete('/products/:id', validateProductId, products.deleteProduct);
 
 router.get('/categories', admin.listCategories);
-router.post('/categories', validateCreateCategory, catalog.createCategory);
-router.patch('/categories/:id', validateCategoryId, catalog.updateCategory);
-router.delete('/categories/:id', validateCategoryId, catalog.deleteCategory);
+router.post('/categories', validateCreateCategory, categories.createCategory);
+router.patch('/categories/:id', validateCategoryId, categories.updateCategory);
+router.delete('/categories/:id', validateCategoryId, categories.deleteCategory);
 
 router.get('/orders', admin.listOrders);
 router.patch('/orders/:id', validateOrderId, admin.updateOrder);
@@ -71,5 +78,8 @@ router.post('/uploads', uploadProductImages, admin.uploadImages);
 router.get('/coupons', admin.listCoupons);
 router.post('/coupons', admin.createCoupon);
 router.patch('/coupons/:id', validateCouponId, admin.updateCoupon);
+
+router.get('/reviews', reviews.listAdminReviews);
+router.patch('/reviews/:id', validateModerateReview, reviews.moderateReview);
 
 module.exports = router;
